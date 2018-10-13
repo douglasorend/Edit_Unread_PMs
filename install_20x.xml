@@ -3,7 +3,7 @@
 <modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
 <id>Dougiefresh:EditPMs</id>
 <name>Edit Unread PMs</name>
-<version>1.0</version>
+<version>1.0.1</version>
 
 <file name="$sourcedir/ManagePermissions.php">
 	<!-- loadAllPermissions function -->
@@ -215,15 +215,9 @@
 	</operation>
 	<operation>
 		<search position="before"><![CDATA[if (!empty($context['send_log']['sent']) && !empty($_REQUEST['replied_to']) && isset($_REQUEST['f']) && $_REQUEST['f'] == 'inbox']]></search>
-		<add><![CDATA[ && empty($context['edit']]]></add>
+		<add><![CDATA[ && empty($context['edit'])]]></add>
 	</operation>
 	
-	<!-- ReportMessage function -->
-	<operation error="ignore">
-		<search position="before"><![CDATA[sendpm($message['recipients'], $message['subject'], $message['body'], false, null, 0]]></search>
-		<add><![CDATA[, 0]]></add>
-	</operation>
-
 	<!-- UnsendMessage function (new function) -->
 	<operation>
 		<search position="end" />
@@ -308,7 +302,14 @@ function UnsendMessage()
 }
 ]]></add>
 	</operation>
-	<operation>
+
+	<!-- ReportMessage function -->
+	<operation error="ignore">
+		<search position="before"><![CDATA[sendpm($message['recipients'], $message['subject'], $message['body'], false, null, 0]]></search>
+		<add><![CDATA[, 0]]></add>
+	</operation>
+
+	<operation error="ignore">
 		<search position="after"><![CDATA[// Check if they are trying to attach a new file...]]></search>
 		<add><![CDATA[// Check if they are trying to delete any current attachments....
 	if (isset($_REQUEST['pmsg'], $_POST['attach_del']) && allowedTo('pm_post_attachments'))

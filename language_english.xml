@@ -3,7 +3,7 @@
 <modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
 <id>Dougiefresh:EditPMs</id>
 <name>Edit Unread PMs</name>
-<version>1.0</version>
+<version>1.0.1</version>
 
 <file name="$languagedir/PersonalMessage.english.php">
 	<operation>
@@ -24,7 +24,7 @@ $txt['confirm_unsend_pm'] = 'Are you sure you want to unsend this PM?  This acti
 </file>
 <file name="$languagedir/ManagePermissions.english.php">
 	<operation>
-		<search psoition="end" />
+		<search position="end" />
 		<add><![CDATA[
 $txt['permissionhelp_pm_edit'] = 'This setting allows members of this group to edit personal messages sent to others, as long as the message hasn\'t been read by any recipient.  Requires the \'Read personal messages\' permission.';
 $txt['permissionname_pm_edit'] = 'Can Edit Unread PMs';
