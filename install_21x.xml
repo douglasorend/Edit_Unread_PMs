@@ -3,15 +3,15 @@
 <modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
 <id>Dougiefresh:EditPMs</id>
 <name>Edit Unread PMs</name>
-<version>1.1</version>
+<version>1.0.1</version>
 
 <file name="$sourcedir/ManagePermissions.php">
 	<!-- loadAllPermissions function -->
 	<operation>
-		<search position="before"><![CDATA['pm_send' => array(false, 'pm', 'use_pm_system'),]]></search>
+		<search position="before"><![CDATA['pm_send' => array(false, 'pm'),]]></search>
 		<add><![CDATA[
-			'pm_edit' => array(false, 'pm', 'use_pm_system'),
-			'pm_unsend' => array(false, 'pm', 'use_pm_system'),]]></add>
+			'pm_edit' => array(false, 'pm'),
+			'pm_unsend' => array(false, 'pm'),]]></add>
 	</operation>
 	
 	<!-- loadIllegalPermissions function -->
@@ -34,16 +34,6 @@
 	</operation>
 </file>
 <file name="$sourcedir/PersonalMessage.php">
-	<!-- function descriptions at top -->
-	<operation>
-		<search position="before"><![CDATA[void ApplyRules()
-		// !!!]]></search>
-		<add><![CDATA[
-
-	void UnsendMessage()
-		// !!!]]></add>
-	</operation>
-
 	<!-- MessageMain function -->
 	<operation>
 		<search position="before"><![CDATA['settings' => 'MessageSettings',]]></search>
@@ -210,7 +200,7 @@
 
 	<!-- MessagePost2 function -->
 	<operation>
-		<search position="before"><![CDATA[$context['send_log'] = sendpm($recipientList, $_REQUEST['subject'], $_REQUEST['message'], !empty($_REQUEST['outbox']), null, !empty($_REQUEST['pm_head']) ? (int) $_REQUEST['pm_head'] : 0]]></search>
+		<search position="before"><![CDATA[$context['send_log'] = sendpm($recipientList, $_REQUEST['subject'], $_REQUEST['message'], true, null, !empty($_REQUEST['pm_head']) ? (int) $_REQUEST['pm_head'] : 0]]></search>
 		<add><![CDATA[, $_GET['sa'] == 'edit2' && !empty($_REQUEST['pmsg']) ? (int) $_REQUEST['pmsg'] : 0]]></add>
 	</operation>
 	<operation>
@@ -429,10 +419,6 @@ function UnsendMessage()
 			updateMemberData($all_to, array('instant_messages' => '+', 'unread_messages' => '+', 'new_pm' => 1));
 	}]]></add>
 	</operation>
-	<operation>
-		<search position="replace"><![CDATA[if (!empty($row['email_address']) && ($row['pm_email_notify'] == 1 || ($row['pm_email_notify'] > 1 && (!empty($modSettings['enable_buddylist']) && $row['is_buddy']))) && $row['is_activated'] == 1)]]></search>
-		<add><![CDATA[if (!empty($row['email_address']) && ($row['pm_email_notify'] == 1 || ($row['pm_email_notify'] > 1 && (!empty($modSettings['enable_buddylist']) && $row['is_buddy']))) && $row['is_activated'] == 1 && !isset($already_emailed[$row['id_member']]))]]></add>
-	</operation>
 </file>
 <file name="$themedir/PersonalMessage.template.php">
 	<!-- template_folder function -->
@@ -441,22 +427,18 @@ function UnsendMessage()
 		<add><![CDATA[<form action="', $scripturl, '?action=pm;sa=', $_GET['sa'] == 'edit' && !empty($_REQUEST['pmsg']) ? 'edit2;pmsg=' . ((int) $_REQUEST['pmsg']) : 'send2', ']]></add>
 	</operation>
 	<operation>
-		<search position="replace"><![CDATA[<img src="', $settings['images_url'], '/icons/im_newmsg.gif" alt="', $txt['new_message'], '" title="', $txt['new_message'], '" />&nbsp;', $txt['new_message'],]]></search>
-		<add><![CDATA[', empty($context['edit']) ? '<img src="' . $settings['images_url'] . '/icons/im_newmsg.gif" alt="' . $txt['new_message'] . '" title="' . $txt['new_message'] . '" />&nbsp;' : '', $context['page_title'],]]></add>
+		<search position="replace"><![CDATA[<span class="generic_icons inbox icon" title="', $txt['new_message'], '"></span> ', $txt['new_message'], ']]></search>
+		<add><![CDATA[', empty($context['edit']) ? '<span class="generic_icons inbox icon" title="' . $txt['new_message'] . '"></span> ' : '', $context['page_title'],]]></add>
 	</operation>
 	<operation>
-		<search position="before"><![CDATA[<li class="quote_button"><a href="', $scripturl, '?action=pm;sa=send;f=', $context['folder'], $context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '', ';pmsg=', $message['id'], ';quote', $context['folder'] == 'sent' ? '' : ';u=' . $message['member']['id'], '">', $txt['quote'], '</a></li>';]]></search>
+		<search position="before"><![CDATA[<li><a href="', $scripturl, '?action=pm;sa=send;f=', $context['folder'], $context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '', ';pmsg=', $message['id'], ';quote', $context['folder'] == 'sent' ? '' : ';u=' . $message['member']['id'], '"><span class="generic_icons quote"></span>', $txt['quote_action'], '</a></li>';]]></search>
 		<add><![CDATA[
 					if (empty($message['is_unread']) && !empty($context['edit_pms']))
 						echo '
-					<li class="reply_button"><a href="', $scripturl, '?action=pm;sa=edit;pmsg=', $message['id'], '">', $txt['modify'], '</a></li>';
+					<li><a href="', $scripturl, '?action=pm;sa=edit;pmsg=', $message['id'], '"><span class="reply_button">', $txt['modify'], '</span></a></li>';
 					if (empty($message['is_unread']) && !empty($context['unsend_pms']))
 						echo '
-					<li class="remove_button"><a href="', $scripturl, '?action=pm;sa=unsend;pmsg=', $message['id'], '" onclick="return confirm(\'', $txt['confirm_unsend_pm'], '\');">', $txt['unsend'], '</a></li>';]]></add>
-	</operation>
-	<operation>
-		<search position="after"><![CDATA[$context['copy_to_outbox'] ? ' checked="checked"']]></search>
-		<add><![CDATA[$_GET['sa'] == 'edit' || ]]></add>
+					<li><a href="', $scripturl, '?action=pm;sa=unsend;pmsg=', $message['id'], '" onclick="return confirm(\'', $txt['confirm_unsend_pm'], '\');"><span class="remove_button">', $txt['unsend'], '</span></a></li>';]]></add>
 	</operation>
 </file>
 </modification>
