@@ -1,3 +1,7 @@
+v1.5 - October 12th, 2018
+o No functionality change.
+o Updated documentation to point to new website.
+
 v1.4 - February 20th, 2018
 o Fixed issue where [b]$context['folder'][/b] was incorrectly reassigned.
 o Moved all language files from xml files to php files for better readability.
