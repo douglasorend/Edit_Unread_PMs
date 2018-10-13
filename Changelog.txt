@@ -1,3 +1,9 @@
+v1.4 - February 20th, 2018
+o Fixed issue where [b]$context['folder'][/b] was incorrectly reassigned.
+o Moved all language files from xml files to php files for better readability.
+o Added Spanish Latin translation, courtsey of [url=https://www.simplemachines.org/community/index.php?action=profile;u=322597]Rock Lee[/url].
+o Added translator section to [b]readme.txt[/b].
+
 v1.3.1 - November 19th, 2017
 o Updated documentation to reflect PM Attachments mod needs to be installed first.
 

@@ -1,5 +1,5 @@
 [hr]
-[center][color=red][size=16pt][b]EDIT UNREAD PMs v1.3.1[/b][/size][/color]
+[center][color=red][size=16pt][b]EDIT UNREAD PMs v1.4[/b][/size][/color]
 [url=http://www.simplemachines.org/community/index.php?action=profile;u=253913][b]By Dougiefresh[/b][/url] -> [url=http://custom.simplemachines.org/mods/index.php?mod=4140]Link to Mod[/url]
 [/center]
 [hr]
@@ -28,6 +28,9 @@ This mod should be installed [b]AFTER[/b] the [url=https://custom.simplemachines
 o [url=http://www.simplemachines.org/community/index.php?topic=403840]Outbox with editable PMs[/url]
 o [url=http://www.simplemachines.org/community/index.php?topic=29990]Unsend PM[/url]
 o [url=http://www.simplemachines.org/community/index.php?topic=426840]Private Message Email Notification[/url]
+
+[color=blue][b][size=12pt][u]Translators[/u][/size][/b][/color]
+o Spanish Latin: [url=https://www.simplemachines.org/community/index.php?action=profile;u=322597]Rock Lee[/url]
 
 [color=blue][b][size=12pt][u]Changelog[/u][/size][/b][/color]
 The changelog has been removed and can be seen at [url=http://www.xptsp.com/board/index.php?topic=1388.msg2023#msg2023]XPtsp.com[/url].

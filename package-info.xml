@@ -5,25 +5,33 @@
 	<id>Dougiefresh:EditPMs</id>
 	<name>Edit Unread PMs</name>
 	<type>modification</type>
-	<version>1.3.1</version>
+	<version>1.4</version>
 
 	<install for="2.0 - 2.0.99">
 		<readme parsebbc="true">readme.txt</readme>
 		<modification>install_20x.xml</modification>
-		<modification>language_english_20x.xml</modification>
+		<require-file name="EditPMs.english.php" destination="$languagedir" />
+		<require-file name="EditPMs.spanish_latin.php" destination="$languagedir" />
+		<require-file name="EditPMs.spanish_latin-utf8.php" destination="$languagedir" />
 	</install>
 	<uninstall for="2.0 - 2.0.99">
 		<modification reverse="true">install_20x.xml</modification>
-		<modification reverse="true">language_english_20x.xml</modification>
+		<remove-file name="$languagedir/EditPMs.english.php" />		
+		<remove-file name="$languagedir/EditPMs.spanish_latin.php" />		
+		<remove-file name="$languagedir/EditPMs.spanish_latin-utf8.php" />		
 	</uninstall>
 
 	<install for="2.1 Beta 3">
 		<readme parsebbc="true">readme.txt</readme>
 		<modification>install_21x.xml</modification>
-		<modification>language_english_21x.xml</modification>
+		<require-file name="EditPMs.english.php" destination="$languagedir" />
+		<require-file name="EditPMs.spanish_latin.php" destination="$languagedir" />
+		<require-file name="EditPMs.spanish_latin-utf8.php" destination="$languagedir" />
 	</install>
 	<uninstall for="2.1 Beta 3">
 		<modification reverse="true">install_21x.xml</modification>
-		<modification reverse="true">language_english_21x.xml</modification>
+		<remove-file name="$languagedir/EditPMs.english.php" />		
+		<remove-file name="$languagedir/EditPMs.spanish_latin.php" />		
+		<remove-file name="$languagedir/EditPMs.spanish_latin-utf8.php" />		
 	</uninstall>
 </package-info>
