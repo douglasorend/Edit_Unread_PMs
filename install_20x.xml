@@ -1,0 +1,461 @@
+<?xml version="1.0"?>
+<!DOCTYPE modification SYSTEM "http://www.simplemachines.org/xml/modification">
+<modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
+<id>Dougiefresh:EditPMs</id>
+<name>Edit Unread PMs</name>
+<version>1.0</version>
+
+<file name="$sourcedir/ManagePermissions.php">
+	<!-- loadAllPermissions function -->
+	<operation>
+		<search position="before"><![CDATA['pm_send' => array(false, 'pm', 'use_pm_system'),]]></search>
+		<add><![CDATA[
+			'pm_edit' => array(false, 'pm', 'use_pm_system'),
+			'pm_unsend' => array(false, 'pm', 'use_pm_system'),]]></add>
+	</operation>
+	
+	<!-- loadIllegalPermissions function -->
+	<operation>
+		<search position="before"><![CDATA[$context['illegal_permissions'][] = 'manage_permissions';]]></search>
+		<add><![CDATA[
+	if (!allowedTo('pm_send'))
+	{
+		$context['illegal_permissions'][] = 'pm_edit';
+		$context['illegal_permissions'][] = 'pm_unsend';
+	}]]></add>
+	</operation>
+
+	<!-- loadIllegalGuestPermissions function -->
+	<operation>
+		<search position="before"><![CDATA[$context['non_guest_permissions'] = array(]]></search>
+		<add><![CDATA[
+		'pm_edit',
+		'pm_unsend',]]></add>
+	</operation>
+</file>
+<file name="$sourcedir/PersonalMessage.php">
+	<!-- function descriptions at top -->
+	<operation>
+		<search position="before"><![CDATA[void ApplyRules()
+		// !!!]]></search>
+		<add><![CDATA[
+
+	void UnsendMessage()
+		// !!!]]></add>
+	</operation>
+
+	<!-- MessageMain function -->
+	<operation>
+		<search position="before"><![CDATA['settings' => 'MessageSettings',]]></search>
+		<add><![CDATA[
+		'edit' => 'MessagePost',
+		'edit2' => 'MessagePost2',
+		'unsend' => 'UnsendMessage',]]></add>
+	</operation>
+	<operation>
+		<search position="replace"><![CDATA[if (isset($_GET['done']) && ($_GET['done'] == 'sent'))
+		$context['pm_sent'] = true;]]></search>
+		<add><![CDATA[if (isset($_GET['done']))
+	{
+		switch ($_GET['done'])
+		{
+			case 'sent':
+				$context['pm_sent'] = true;
+				break;
+			case 'unsent':
+				$context['pm_unsent'] = true;
+				break;
+			case 'unsent_some':
+				$context['pm_unsent'] = true;
+				break;
+			case 'edit':
+				$context['pm_edit'] = true;
+				break;
+		}
+	}
+
+	// Cache a few permission-based PM settings:
+	$context['edit_pms'] = allowedTo('pm_edit');
+	$context['unsend_pms'] = allowedTo('pm_unsend');]]></add>
+	</operation>
+	<operation>
+		<search position="before"><![CDATA[$context['folder'] = !isset($_REQUEST['f']) || $_REQUEST['f'] != 'sent' ? 'inbox' : 'sent';]]></search>
+		<add><![CDATA[
+	$context['folder'] = !isset($_GET['sa']) || $_GET['sa'] == 'edit' || $_GET['sa'] == 'edit' ? 'sent' : $context['folder'];]]></add>
+	</operation>
+
+	<!-- MessagePost function -->
+	<operation>
+		<search position="replace"><![CDATA[$context['page_title'] = $txt['send_message'];]]></search>
+		<add><![CDATA[$context['edit'] = isset($_REQUEST['pmsg']) && ($_GET['sa'] == 'edit' || $_GET['sa'] == 'edit2');
+	if ($context['edit'] && !allowedTo('pm_edit'))
+		fatal_lang_error('cannot_edit_pm');
+	$context['page_title'] = $txt[ $context['edit'] ? 'modify_msg' : 'send_message' ];]]></add>
+	</operation>
+	<operation>
+		<search position="replace"><![CDATA[$isReceived = $smcFunc['db_num_rows']($request) != 0;]]></search>
+		<add><![CDATA[$isReceived = !$context['edit'] && $smcFunc['db_num_rows']($request) != 0;]]></add>
+	</operation>
+	<operation>
+		<search position="after"><![CDATA[!isset($context['response_prefix']) && !($context['response_prefix'] = cache_get_data('response_prefix'))]]></search>
+		<add><![CDATA[!$context['edit'] && ]]></add>
+	</operation>
+	<operation>
+		<search position="after"><![CDATA[$context['reply'] && trim($context['response_prefix']) != '' && $smcFunc['strpos']($form_subject, trim($context['response_prefix'])) !== 0]]></search>
+		<add><![CDATA[!$context['edit'] && ]]></add>
+	</operation>
+	<operation>
+		<search position="after"><![CDATA[else
+			$form_message = '';]]></search>
+		<add><![CDATA[elseif ($_GET['sa'] == 'edit')
+			$form_message = preg_replace('~<br ?/?' . '>~i', "\n", $row_quoted['body']);]]></add>
+	</operation>
+	<operation>
+		<search position="after"><![CDATA[else
+		$context['to_value'] = '';]]></search>
+		<add><![CDATA[elseif (!empty($context['edit']))
+	{
+		// Get the "To" recipients and whether they have read the PM:
+		$request = $smcFunc['db_query']('', '
+			SELECT mem.id_member, mem.real_name, mem.pm_ignore_list, pmr.is_read
+			FROM {db_prefix}pm_recipients AS pmr
+				INNER JOIN {db_prefix}members AS mem ON (mem.id_member = pmr.id_member)
+			WHERE pmr.id_pm = {int:id_pm}
+				AND pmr.bcc = {int:not_bcc}',
+			array(
+				'id_pm' => $pmsg,
+				'not_bcc' => 0,
+			)
+		);
+		$is_read = 0;
+		while ($row = $smcFunc['db_fetch_assoc']($request))
+			$context['recipients']['to'][] = array(
+				'id' => $row['id_member'],
+				'name' => $row['real_name'],
+				'pm_ignore_list' => explode(',', $row['pm_ignore_list']),
+				'is_read' => ($is_read += $row['is_read']),
+			);
+		$smcFunc['db_free_result']($request);
+
+		// Get a literal name list in case the user has JavaScript disabled.
+		$names = array();
+		foreach ($context['recipients']['to'] as $to)
+			$names[] = $to['name'];
+		$context['to_value'] = empty($names) ? '' : '&quot;' . implode('&quot;, &quot;', $names) . '&quot;';
+
+		// Get the "Bcc" recipients and whether they have read the PM:
+		$request = $smcFunc['db_query']('', '
+			SELECT mem.id_member, mem.real_name, mem.pm_ignore_list, pmr.is_read
+			FROM {db_prefix}pm_recipients AS pmr
+				INNER JOIN {db_prefix}members AS mem ON (mem.id_member = pmr.id_member)
+			WHERE pmr.id_pm = {int:id_pm}
+				AND pmr.bcc = {int:is_bcc}',
+			array(
+				'id_pm' => $pmsg,
+				'is_bcc' => 1,
+			)
+		);
+		while ($row = $smcFunc['db_fetch_assoc']($request))
+			$context['recipients']['bcc'][] = array(
+				'id' => $row['id_member'],
+				'name' => $row['real_name'],
+				'pm_ignore_list' => explode(',', $row['pm_ignore_list']),
+				'is_read' => ($is_read += $row['is_read']),
+			);
+		$smcFunc['db_free_result']($request);
+
+		// Get a literal name list in case the user has JavaScript disabled.
+		$names = array();
+		foreach ($context['recipients']['bcc'] as $to)
+			$names[] = $to['name'];
+		$context['bbc_value'] = empty($names) ? '' : '&quot;' . implode('&quot;, &quot;', $names) . '&quot;';
+		
+		// If anybody has read the PM, then it cannot be edited!
+		if ($is_read)
+			fatal_lang_error('pm_no_edit', false);
+		
+		// If the "getPMAttachmentFilename" function exists, then get the PM attachments:
+		if (function_exists('getPMAttachmentFilename'))
+		{
+			$request = $smcFunc['db_query']('', '
+				SELECT IFNULL(size, -1) AS filesize, filename, id_attach
+				FROM {db_prefix}pm_attachments
+				WHERE id_pm = {int:id_pm}
+					AND attachment_type = {int:attachment_type}',
+				array(
+					'id_pm' => (int) $_REQUEST['pmsg'],
+					'attachment_type' => 0,
+				)
+			);
+			while ($row = $smcFunc['db_fetch_assoc']($request))
+			{
+				if ($row['filesize'] <= 0)
+					continue;
+				$context['current_attachments'][] = array(
+					'name' => htmlspecialchars($row['filename']),
+					'id' => $row['id_attach'],
+				);
+			}
+			$smcFunc['db_free_result']($request);
+		}
+	}
+	]]></add>
+	</operation>
+	<operation>
+		<search position="replace"><![CDATA['url' => $scripturl . '?action=pm;sa=send',
+		'name' => $txt['new_message']]]></search>
+		<add><![CDATA['url' => $scripturl . '?action=pm;sa=send',
+		'name' => $txt[ $context['edit'] ? 'modify_msg' : 'new_message' ],]]></add>
+	</operation>
+
+	<!-- MessagePost2 function -->
+	<operation>
+		<search position="before"><![CDATA[$context['send_log'] = sendpm($recipientList, $_REQUEST['subject'], $_REQUEST['message'], !empty($_REQUEST['outbox']), null, !empty($_REQUEST['pm_head']) ? (int) $_REQUEST['pm_head'] : 0]]></search>
+		<add><![CDATA[, $_GET['sa'] == 'edit2' && !empty($_REQUEST['pmsg']) ? (int) $_REQUEST['pmsg'] : 0]]></add>
+	</operation>
+	<operation>
+		<search position="before"><![CDATA[if (!empty($context['send_log']['sent']) && !empty($_REQUEST['replied_to']) && isset($_REQUEST['f']) && $_REQUEST['f'] == 'inbox']]></search>
+		<add><![CDATA[ && empty($context['edit']]]></add>
+	</operation>
+	
+	<!-- ReportMessage function -->
+	<operation error="ignore">
+		<search position="before"><![CDATA[sendpm($message['recipients'], $message['subject'], $message['body'], false, null, 0]]></search>
+		<add><![CDATA[, 0]]></add>
+	</operation>
+
+	<!-- UnsendMessage function (new function) -->
+	<operation>
+		<search position="end" />
+		<add><![CDATA[
+// Unsend the specified personal message.
+function UnsendMessage()
+{
+	global $user_info, $modSettings, $smcFunc, $context;
+
+	// Why would you want access to your sent items if you're not allowed to send anything?
+	isAllowedTo('pm_send');
+
+	// Are you allowed to unsend anything?
+	isAllowedTo('pm_unsend');
+
+	// Why would you try to unsend someone else's PM?
+	$pmsg = isset($_GET['pmsg']) ? (int) $_GET['pmsg'] : 0;
+	$result = $smcFunc['db_query']('', '
+		SELECT id_member_from
+		FROM {db_prefix}personal_messages
+		WHERE id_pm = {int:id_pm}
+			AND id_member_from = {int:id_member}',
+		array(
+			'id_pm' => $pmsg,
+			'id_member' => (int) $user_info['id'],
+		)
+	);
+	$row = $smcFunc['db_fetch_assoc']($result);
+	$smcFunc['db_free_result']($result);
+	if (empty($row))
+		fatal_lang_error('pm_not_yours', false);
+
+	// Has anybody read this PM yet?  If so, we can't proceed:
+	$result = $smcFunc['db_query']('', '
+		SELECT COUNT(is_read) AS is_read
+		FROM {db_prefix}pm_recipients
+		WHERE id_pm = {int:id_pm}
+			AND is_read > {int:not_read}',
+		array(
+			'id_pm' => $pmsg,
+			'not_read' => 0,
+		)
+	);
+	list($count) = $smcFunc['db_fetch_row']($result);
+	$smcFunc['db_free_result']($result);
+	if (!empty($count))
+		fatal_lang_error('pm_no_unsend', false);
+
+	// Remove all recipients who haven't read the PM yet...
+	$result = $smcFunc['db_query']('', '
+		SELECT id_member
+		FROM {db_prefix}pm_recipients
+		WHERE id_pm = {int:id_pm}
+			AND is_read = {int:not_read}',
+		array(
+			'id_pm' => $pmsg,
+			'not_read' => 0,
+		)
+	);
+	while ($row = $smcFunc['db_fetch_assoc']($result))
+		deleteMessages( array($pmsg), null, $row['id_member']);
+	$smcFunc['db_free_result']($result);
+
+	// Remove the PM if nobody is going to receive it...
+	$result = $smcFunc['db_query']('', '
+		SELECT COUNT(*) AS pm_unread
+		FROM {db_prefix}pm_recipients
+		WHERE id_pm = {int:id_pm}
+			AND is_read > {int:not_read}',
+		array(
+			'id_pm' => $pmsg,
+			'not_read' => 0,
+		)
+	);
+	$row = $smcFunc['db_fetch_assoc']($result);
+	$smcFunc['db_free_result']($result);
+	if ($row['pm_unread'] == 0)
+		deleteMessages( array($pmsg), null, $user_info['id']);
+
+	// Done... Tell user what we accomplished...
+	redirectexit($context['current_label_redirect'] . ';done=unsent' . ($row['pm_unread'] != 0 ? '_some' : ''));
+}
+]]></add>
+	</operation>
+	<operation>
+		<search position="after"><![CDATA[// Check if they are trying to attach a new file...]]></search>
+		<add><![CDATA[// Check if they are trying to delete any current attachments....
+	if (isset($_REQUEST['pmsg'], $_POST['attach_del']) && allowedTo('pm_post_attachments'))
+	{
+		$del_temp = array();
+		foreach ($_POST['attach_del'] as $i => $dummy)
+			$del_temp[$i] = (int) $dummy;
+
+		require_once($sourcedir . '/ManageAttachments.php');
+		$attachmentQuery = array(
+			'attachment_type' => 0,
+			'id_msg' => (int) $_REQUEST['pmsg'],
+			'not_id_attach' => $del_temp,
+		);
+		removePMAttachments($attachmentQuery);
+	}
+
+	]]></add>
+	</operation>
+</file>
+<file name="$sourcedir/Subs-Post.php">
+	<!-- sendpm function -->
+	<operation>
+		<search position="before"><![CDATA[function sendpm($recipients, $subject, $message, $store_outbox = false, $from = null, $pm_head = 0]]></search>
+		<add><![CDATA[, $pmsg = 0]]></add>
+	</operation>
+	<operation>
+		<search position="replace"><![CDATA[// Insert the message itself and then grab the last insert id.
+	$smcFunc['db_insert']('',
+		'{db_prefix}personal_messages',
+		array(
+			'id_pm_head' => 'int', 'id_member_from' => 'int', 'deleted_by_sender' => 'int',
+			'from_name' => 'string-255', 'msgtime' => 'int', 'subject' => 'string-255', 'body' => 'string-65534',
+		),
+		array(
+			$pm_head, $from['id'], ($store_outbox ? 0 : 1),
+			$from['username'], time(), $htmlsubject, $htmlmessage,
+		),
+		array('id_pm')
+	);
+	$id_pm = $smcFunc['db_insert_id']('{db_prefix}personal_messages', 'id_pm');]]></search>
+		<add><![CDATA[// Insert the message itself and then grab the last insert id.
+	if (!empty($pmsg) && isset($_GET['sa']) && $_GET['sa'] == 'edit2')
+	{
+		$smcFunc['db_insert']('replace',
+			'{db_prefix}personal_messages',
+			array(
+				'id_pm' => 'int', 'id_pm_head' => 'int', 'id_member_from' => 'int', 'deleted_by_sender' => 'int',
+				'from_name' => 'string-255', 'msgtime' => 'int', 'subject' => 'string-255', 'body' => 'string-65534',
+			),
+			array(
+				(int) $pmsg, $pm_head, $from['id'], ($store_outbox ? 0 : 1),
+				$from['username'], time(), $htmlsubject, $htmlmessage,
+			),
+			array('id_pm')
+		);
+		$id_pm = (int) $pmsg;
+	}
+	else
+	{
+		$smcFunc['db_insert']('',
+			'{db_prefix}personal_messages',
+			array(
+				'id_pm_head' => 'int', 'id_member_from' => 'int', 'deleted_by_sender' => 'int',
+				'from_name' => 'string-255', 'msgtime' => 'int', 'subject' => 'string-255', 'body' => 'string-65534',
+			),
+			array(
+				$pm_head, $from['id'], ($store_outbox ? 0 : 1),
+				$from['username'], time(), $htmlsubject, $htmlmessage,
+			),
+			array('id_pm')
+		);
+		$id_pm = $smcFunc['db_insert_id']('{db_prefix}personal_messages', 'id_pm');
+	}
+]]></add>
+	</operation>
+	<operation>
+		<search position="before"><![CDATA[if (empty($modSettings['permission_enable_deny']))
+		$disallowed_groups = array();]]></search>
+		<add><![CDATA[
+
+	// If we are editing a PM, take note of who we have already emailed about the PM so we don't email them again :p
+	$already_emailed = array();
+	if (!empty($pmsg))
+	{
+		$request = $smcFunc['db_query']('', '
+			SELECT id_member, is_read
+			FROM {db_prefix}pm_recipients
+			WHERE id_pm = {int:id_pm}',
+			array(
+				'id_pm' => $pmsg,
+			)
+		);
+		while ($row = $smcFunc['db_fetch_assoc']($request))
+			$already_emailed[$row['id_member']] = $row['is_read'];
+		$smcFunc['db_free_result']($request);
+	}]]></add>
+	</operation>
+	<operation>
+		<search position="replace"><![CDATA[$insertRows[] = array($id_pm, $to, in_array($to, $recipients['bcc']) ? 1 : 0, isset($deletes[$to]) ? 1 : 0, 1]]></search>
+		<add><![CDATA[$insertRows[] = array($id_pm, $to, in_array($to, $recipients['bcc']) ? 1 : 0, isset($deletes[$to]) ? 1 : 0, isset($already_emailed[$to]) ? $already_emailed[$to] : 1]]></add>
+	</operation>
+	<operation>
+		<search position="replace"><![CDATA[// Add one to their unread and read message counts.
+	foreach ($all_to as $k => $id)
+		if (isset($deletes[$id]))
+			unset($all_to[$k]);
+	if (!empty($all_to))
+		updateMemberData($all_to, array('instant_messages' => '+', 'unread_messages' => '+', 'new_pm' => 1));]]></search>
+		<add><![CDATA[// Add one to their unread and read message counts.
+	if (empty($pmsg) || !$_GET['sa'] == 'edit')
+	{
+		foreach ($all_to as $k => $id)
+			if (isset($deletes[$id]))
+				unset($all_to[$k]);
+		if (!empty($all_to))
+			updateMemberData($all_to, array('instant_messages' => '+', 'unread_messages' => '+', 'new_pm' => 1));
+	}]]></add>
+	</operation>
+	<operation>
+		<search position="replace"><![CDATA[if (!empty($row['email_address']) && ($row['pm_email_notify'] == 1 || ($row['pm_email_notify'] > 1 && (!empty($modSettings['enable_buddylist']) && $row['is_buddy']))) && $row['is_activated'] == 1)]]></search>
+		<add><![CDATA[if (!empty($row['email_address']) && ($row['pm_email_notify'] == 1 || ($row['pm_email_notify'] > 1 && (!empty($modSettings['enable_buddylist']) && $row['is_buddy']))) && $row['is_activated'] == 1 && !isset($already_emailed[$row['id_member']]))]]></add>
+	</operation>
+</file>
+<file name="$themedir/PersonalMessage.template.php">
+	<!-- template_folder function -->
+	<operation>
+		<search position="replace"><![CDATA[<form action="', $scripturl, '?action=pm;sa=send2]]></search>
+		<add><![CDATA[<form action="', $scripturl, '?action=pm;sa=', $_GET['sa'] == 'edit' && !empty($_REQUEST['pmsg']) ? 'edit2;pmsg=' . ((int) $_REQUEST['pmsg']) : 'send2', ']]></add>
+	</operation>
+	<operation>
+		<search position="replace"><![CDATA[<img src="', $settings['images_url'], '/icons/im_newmsg.gif" alt="', $txt['new_message'], '" title="', $txt['new_message'], '" />&nbsp;', $txt['new_message'],]]></search>
+		<add><![CDATA[', empty($context['edit']) ? '<img src="' . $settings['images_url'] . '/icons/im_newmsg.gif" alt="' . $txt['new_message'] . '" title="' . $txt['new_message'] . '" />&nbsp;' : '', $context['page_title'],]]></add>
+	</operation>
+	<operation>
+		<search position="before"><![CDATA[<li class="quote_button"><a href="', $scripturl, '?action=pm;sa=send;f=', $context['folder'], $context['current_label_id'] != -1 ? ';l=' . $context['current_label_id'] : '', ';pmsg=', $message['id'], ';quote', $context['folder'] == 'sent' ? '' : ';u=' . $message['member']['id'], '">', $txt['quote'], '</a></li>';]]></search>
+		<add><![CDATA[
+					if (empty($message['is_unread']) && !empty($context['edit_pms']))
+						echo '
+					<li class="reply_button"><a href="', $scripturl, '?action=pm;sa=edit;pmsg=', $message['id'], '">', $txt['modify'], '</a></li>';
+					if (empty($message['is_unread']) && !empty($context['unsend_pms']))
+						echo '
+					<li class="remove_button"><a href="', $scripturl, '?action=pm;sa=unsend;pmsg=', $message['id'], '" onclick="return confirm(\'', $txt['confirm_unsend_pm'], '\');">', $txt['unsend'], '</a></li>';]]></add>
+	</operation>
+	<operation>
+		<search position="after"><![CDATA[$context['copy_to_outbox'] ? ' checked="checked"']]></search>
+		<add><![CDATA[$_GET['sa'] == 'edit' || ]]></add>
+	</operation>
+</file>
+</modification>
