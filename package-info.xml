@@ -5,7 +5,7 @@
 	<id>Dougiefresh:EditPMs</id>
 	<name>Edit Unread PMs</name>
 	<type>modification</type>
-	<version>1.2</version>
+	<version>1.3</version>
 
 	<install for="2.0 - 2.0.99">
 		<readme parsebbc="true">readme.txt</readme>
@@ -17,12 +17,12 @@
 		<modification reverse="true">language_english_20x.xml</modification>
 	</uninstall>
 
-	<install for="2.1 Beta 2">
+	<install for="2.1 Beta 3">
 		<readme parsebbc="true">readme.txt</readme>
 		<modification>install_21x.xml</modification>
 		<modification>language_english_21x.xml</modification>
 	</install>
-	<uninstall for="2.1 Beta 2">
+	<uninstall for="2.1 Beta 3">
 		<modification reverse="true">install_21x.xml</modification>
 		<modification reverse="true">language_english_21x.xml</modification>
 	</uninstall>

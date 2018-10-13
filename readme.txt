@@ -1,5 +1,5 @@
 [hr]
-[center][color=red][size=16pt][b]EDIT UNREAD PMs v1.2[/b][/size][/color]
+[center][color=red][size=16pt][b]EDIT UNREAD PMs v1.3[/b][/size][/color]
 [url=http://www.simplemachines.org/community/index.php?action=profile;u=253913][b]By Dougiefresh[/b][/url] -> [url=http://custom.simplemachines.org/mods/index.php?mod=4140]Link to Mod[/url]
 [/center]
 [hr]
@@ -20,7 +20,7 @@ This mod was part of the now-discontinued [url=http://www.simplemachines.org/com
 This updated mod makes additional checks to make sure nobody has read the PM before you are allowed to edit or unsend it.
 
 [color=blue][b][size=12pt][u]Compatibility Notes[/u][/size][/b][/color]
-This mod was tested on SMF 2.0.13, but should work on SMF 2.0 and up.  SMF 1.x is not and will not be supported.  
+This mod was tested on SMF 2.0.13, but should work on SMF 2.1 Beta 3, as well as SMF 2.0 and up.  SMF 1.x is not and will not be supported.
 
 [color=blue][b][size=12pt][u]Related Discussions[/u][/size][/b][/color]
 o [url=http://www.simplemachines.org/community/index.php?topic=403840]Outbox with editable PMs[/url]
