@@ -3,7 +3,7 @@
 <modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
 <id>Dougiefresh:EditPMs</id>
 <name>Edit Unread PMs</name>
-<version>1.5</version>
+<version>1.6</version>
 
 <file name="$sourcedir/ManagePermissions.php">
 	<!-- ModifyPermissions -->
@@ -101,6 +101,13 @@
 	</operation>
 
 	<!-- MessagePost function -->
+	<operation>
+		<search position="after"><![CDATA[// Just in case it was loaded from somewhere else.]]></search>
+		<add><![CDATA[loadLanguage('EditPMs');
+	$txt['pm_email'] = substr($txt['pm_email'], 0, strpos($txt['pm_email'], 'MESSAGE'));
+	$txt['pm_email'] = substr($txt['pm_email'], 0, strrpos($txt['pm_email'], '.'));
+	]]></add>
+	</operation>
 	<operation>
 		<search position="replace"><![CDATA[$context['page_title'] = $txt['send_message'];]]></search>
 		<add><![CDATA[$context['edit'] = isset($_REQUEST['pmsg']) && ($_GET['sa'] == 'edit' || $_GET['sa'] == 'edit2');

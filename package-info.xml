@@ -5,7 +5,7 @@
 	<id>Dougiefresh:EditPMs</id>
 	<name>Edit Unread PMs</name>
 	<type>modification</type>
-	<version>1.5</version>
+	<version>1.6</version>
 
 	<install for="2.0 - 2.0.99">
 		<readme parsebbc="true">readme.txt</readme>
@@ -13,12 +13,16 @@
 		<require-file name="EditPMs.english.php" destination="$languagedir" />
 		<require-file name="EditPMs.spanish_latin.php" destination="$languagedir" />
 		<require-file name="EditPMs.spanish_latin-utf8.php" destination="$languagedir" />
+		<require-file name="EditPMs.russian.php" destination="$languagedir" />
+		<require-file name="EditPMs.russian-utf8.php" destination="$languagedir" />
 	</install>
 	<uninstall for="2.0 - 2.0.99">
 		<modification reverse="true">install_20x.xml</modification>
 		<remove-file name="$languagedir/EditPMs.english.php" />		
 		<remove-file name="$languagedir/EditPMs.spanish_latin.php" />		
 		<remove-file name="$languagedir/EditPMs.spanish_latin-utf8.php" />		
+		<remove-file name="$languagedir/EditPMs.russian.php" />		
+		<remove-file name="$languagedir/EditPMs.russian-utf8.php" />		
 	</uninstall>
 
 	<install for="2.1 Beta 3">
@@ -27,11 +31,15 @@
 		<require-file name="EditPMs.english.php" destination="$languagedir" />
 		<require-file name="EditPMs.spanish_latin.php" destination="$languagedir" />
 		<require-file name="EditPMs.spanish_latin-utf8.php" destination="$languagedir" />
+		<require-file name="EditPMs.russian.php" destination="$languagedir" />
+		<require-file name="EditPMs.russian-utf8.php" destination="$languagedir" />
 	</install>
 	<uninstall for="2.1 Beta 3">
 		<modification reverse="true">install_21x.xml</modification>
 		<remove-file name="$languagedir/EditPMs.english.php" />		
 		<remove-file name="$languagedir/EditPMs.spanish_latin.php" />		
 		<remove-file name="$languagedir/EditPMs.spanish_latin-utf8.php" />		
+		<remove-file name="$languagedir/EditPMs.russian.php" />		
+		<remove-file name="$languagedir/EditPMs.russian-utf8.php" />		
 	</uninstall>
 </package-info>

@@ -1,3 +1,7 @@
+v1.6 - October 18th, 2018
+o Added Russian translation, courtsey of [url=https://www.simplemachines.org/community/index.php?action=profile;u=244106]Geor'G[/url]!
+o Fixed an issue where message was incorrectly sent when it shouldn't be.
+
 v1.5 - October 12th, 2018
 o No functionality change.
 o Updated documentation to point to new website.
